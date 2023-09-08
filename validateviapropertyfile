@@ -1,0 +1,81 @@
+using System;
+using System.IO;
+using System.Text.Json;
+using System.Collections.Generic;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+
+namespace SeleniumWithDynamicJsonLocators
+{
+    class Program
+    {
+        class LocatorConfig
+        {
+            public Dictionary<string, Dictionary<string, string>> Locators { get; set; }
+        }
+
+        static void Main(string[] args)
+        {
+            try
+            {
+                // Read the JSON file
+                string jsonContent = File.ReadAllText("locators.json");
+
+                // Deserialize the JSON into your custom object
+                LocatorConfig locatorConfig = JsonSerializer.Deserialize<LocatorConfig>(jsonContent);
+
+                // Create a Selenium WebDriver instance (assuming you have ChromeDriver installed)
+                IWebDriver driver = new ChromeDriver();
+
+                // Define the object you want to interact with
+                string objectKey = "Object1"; // Replace with the desired object key
+
+                if (locatorConfig.Locators.ContainsKey(objectKey))
+                {
+                    Dictionary<string, string> objectLocators = locatorConfig.Locators[objectKey];
+
+                    // Try to locate the element using XPath, ID, TagName, or CSSSelector
+                    if (objectLocators.ContainsKey("XPath"))
+                    {
+                        string xpath = objectLocators["XPath"];
+                        IWebElement element = driver.FindElement(By.XPath(xpath));
+                        element.Click(); // Example action
+                    }
+                    else if (objectLocators.ContainsKey("ID"))
+                    {
+                        string id = objectLocators["ID"];
+                        IWebElement element = driver.FindElement(By.Id(id));
+                        element.Click(); // Example action
+                    }
+                    else if (objectLocators.ContainsKey("TagName"))
+                    {
+                        string tagName = objectLocators["TagName"];
+                        IWebElement element = driver.FindElement(By.TagName(tagName));
+                        element.Click(); // Example action
+                    }
+                    else if (objectLocators.ContainsKey("CSSSelector"))
+                    {
+                        string cssSelector = objectLocators["CSSSelector"];
+                        IWebElement element = driver.FindElement(By.CssSelector(cssSelector));
+                        element.Click(); // Example action
+                    }
+                    else
+                    {
+                        Console.WriteLine("Locator type not specified for the object.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Object key '{objectKey}' not found in the JSON configuration.");
+                }
+
+                // Don't forget to close the WebDriver when done
+                driver.Quit();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+}
